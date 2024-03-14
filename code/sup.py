@@ -19,6 +19,7 @@ from network.dynamic_graph_unet2d import GraphUnetV5
 from torch.utils.tensorboard import SummaryWriter
 from utils import *
 import segmentation_models_pytorch as smp
+from loss.loss_perm_inv import GlobalLoss
 
 
 import sys
@@ -92,45 +93,7 @@ def run(fold, writer, args):
     num_parameters = sum([l.nelement() for l in model.parameters()])
     logger.print(f"number of parameters: {num_parameters}")
 
-    if args.dataset == 'chd':
-        train_keys, val_keys = get_split_chd(os.path.join(
-            args.data_dir, 'train'), fold, args.cross_vali_num)
-        # now random sample train_keys
-        if args.enable_few_data:
-            random.seed(args.seed)
-            train_keys = random.sample(list(train_keys), k=args.sampling_k)
-        logger.print(f'train_keys:{train_keys}')
-        logger.print(f'val_keys:{val_keys}')
-        # train_dataset = CHD(keys=train_keys, purpose='train', args=args)
-        # validate_dataset = CHD(keys=val_keys, purpose='val', args=args)
-    elif args.dataset == 'mmwhs':
-        train_keys, val_keys = get_split_mmwhs(fold, args.cross_vali_num)
-        if args.enable_few_data:
-            random.seed(args.seed)
-            train_keys = random.sample(list(train_keys), k=args.sampling_k)
-        logger.print(f'train_keys:{train_keys}')
-        # train_dataset = MMWHS(keys=train_keys, purpose='val', args=args)
-        # logger.print('training data dir '+train_dataset.data_dir)
-        # validate_dataset = MMWHS(keys=val_keys, purpose='val', args=args)
-    elif args.dataset == 'acdc':
-        train_keys, val_keys = get_split_acdc(fold, args.cross_vali_num)
-        if args.enable_few_data:
-            random.seed(args.seed)
-            train_keys = random.sample(list(train_keys), k=args.sampling_k)
-        logger.print(f'train_keys:{train_keys}')
-        logger.print(f'val_keys:{val_keys}')
-        # train_dataset = ACDC(keys=train_keys, purpose='train', args=args)
-        # validate_dataset = ACDC(keys=val_keys, purpose='val', args=args)
-    elif args.dataset == 'hvsmr':
-        train_keys, val_keys = get_split_hvsmr(fold, args.cross_vali_num)
-        if args.enable_few_data:
-            random.seed(args.seed)
-            train_keys = random.sample(list(train_keys), k=args.sampling_k)
-        logger.print(f'train_keys:{train_keys}')
-        logger.print(f'val_keys:{val_keys}')
-        # train_dataset = HVSMR(keys=train_keys, purpose='train', args=args)
-        # validate_dataset = HVSMR(keys=val_keys, purpose='val', args=args)
-    elif args.dataset == "raidium":
+    if args.dataset == "raidium":
         train_files, val_files = get_split_raidium(args.data_dir, fold, args.cross_vali_num)
         if args.enable_few_data:
             random.seed(args.seed)
@@ -155,7 +118,8 @@ def run(fold, writer, args):
     )
 
     # criterion = torch.nn.CrossEntropyLoss()
-    criterion = DiceLoss(activation="softmax", ignore_background=False)
+    # criterion = DiceLoss(activation="softmax", ignore_background=False)
+    criterion = GlobalLoss().to(args.device)
     
     optimizer = torch.optim.Adam(filter(
         lambda p: p.requires_grad, model.parameters()), lr=args.lr, weight_decay=1e-5
@@ -229,7 +193,7 @@ def train(data_loader, model, criterion, epoch, optimizer, scheduler, logger, ar
         img, label, keypoints = tup
         # img, label, keypoints, keypoints_label, nimg, nkp = tup
         image_var = img.float().to(args.device)
-        label = label.float().to(args.device)
+        label = label.float().to(args.device).unsqueeze(1)
         keypoints = keypoints.float().to(args.device)
         # keypoints_label = keypoints_label.long().to(args.device)
         # nimg = nimg.float().to(args.device)

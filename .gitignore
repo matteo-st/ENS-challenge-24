@@ -1,9 +1,9 @@
 *
 !.gitignore
-!/code/loss
-!/code/dataset
-!/code/network
-!/code/scripts
+!/code/loss/*
+!/code/dataset/*
+!/code/network/*
+!/code/scripts/*
 !/code/experiment_log.py
 !/code/lr_scheduler.py
 !/code/metrics.py

@@ -64,7 +64,7 @@ class DiceLoss(nn.Module):
         # transform sparse mask into one-hot mask
         # shape: (B, H, W) -> (B, C, H, W)
         input_shape = tuple(gt.shape)  # (N, H, W, ...)
-
+        print("input shape", input_shape)
         new_shape = (input_shape[0], class_num) + input_shape[1:]
         print("new_shape", new_shape)
         one_hot = torch.zeros(new_shape).to(pred.device, dtype=torch.float)

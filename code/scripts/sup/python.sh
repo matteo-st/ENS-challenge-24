@@ -1,7 +1,7 @@
 #!/bin/bash
 
-cd /mnt/c/Users/matte/iCloudDrive/Documents/Studies/IASD/College-De-France/Challenge
-
+#cd /mnt/c/Users/matte/iCloudDrive/Documents/Studies/IASD/College-De-France/Challenge
+cd ~/ENS-challenge-24
 sample_size=${1:-5}
 fold=${2:-1}
 export num_layer=8

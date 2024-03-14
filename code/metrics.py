@@ -175,7 +175,7 @@ class SegmentationMetric(object):
         else:
             raise NotImplemented
 
-    def git status(self, mode='mean'):
+    def git_status(self, mode='mean'):
         pixAcc = 1.0 * self.total_correct / (np.spacing(1) + self.total_label)
         IoU = 1.0 * self.total_inter / (np.spacing(1) + self.total_union)
         Dice = 2.0 * self.total_inter / (np.spacing(1) + self.total_union + self.total_inter)

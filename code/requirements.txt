@@ -3,10 +3,10 @@ pandas
 numpy
 tqdm
 matplotlib
-torch
+#torch
 opencv-python
 batchgenerators
 timm
 segmentation-models-pytorch
-torch-scatter
+#torch-scatter
 tensorboard

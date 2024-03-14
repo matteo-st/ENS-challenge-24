@@ -1,6 +1,6 @@
-import add_sys_path
+#import add_sys_path
 import torch.nn as nn
-from gcn_lib.torch_nn import act_layer
+from .torch_nn import act_layer
 from timm.models.layers import DropPath
 
 

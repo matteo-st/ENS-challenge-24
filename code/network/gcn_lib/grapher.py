@@ -1,12 +1,12 @@
 
 from typing import Tuple, Union
 
-import add_sys_path
+#import add_sys_path
 import numpy as np
 import torch
 import torch.nn.functional as F
-from gcn_lib.dygraphconv import DyGraphConv
-from gcn_lib.pos_embed import (get_2d_relative_pos_embed,
+from .dygraphconv import DyGraphConv
+from .pos_embed import (get_2d_relative_pos_embed,
                                get_3d_relative_pos_embed)
 from timm.models.layers import DropPath
 from torch import nn

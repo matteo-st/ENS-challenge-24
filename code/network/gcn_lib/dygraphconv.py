@@ -3,12 +3,12 @@ import gc
 import unittest
 from typing import Union
 
-import add_sys_path
+#import add_sys_path
 import numpy as np
 import torch
 import torch.nn.functional as F
-from gcn_lib.torch_edge import DenseDilatedKnnGraph
-from gcn_lib.torch_vertex import GraphConv2d
+from .torch_edge import DenseDilatedKnnGraph
+from .torch_vertex import GraphConv2d
 from torch import nn
 
 

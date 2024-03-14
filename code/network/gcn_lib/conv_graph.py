@@ -2,8 +2,8 @@ from typing import Union
 import sys
 # from add_sys_path import *
 import torch.nn as nn
-from gcn_lib.ffn import FFN
-from gcn_lib.grapher import Grapher
+from .ffn import FFN
+from .grapher import Grapher
 
 
 class ConvGraph(nn.Module):

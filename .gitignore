@@ -1,0 +1,14 @@
+*
+!.gitignore
+!/code/loss
+!/code/dataset
+!/code/network
+!/code/scripts
+!/code/experiment_log.py
+!/code/lr_scheduler.py
+!/code/metrics.py
+!/code/myconfig.py
+!/code/pretrain1.py
+!/code/requirements.txt
+!/code/sup.py
+!/code/utils.py

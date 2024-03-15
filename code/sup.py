@@ -21,6 +21,7 @@ from utils import *
 import segmentation_models_pytorch as smp
 from loss.loss_perm_inv import GlobalLoss
 from train import Trainer
+from models import UNet
 from meters import RandScore
 
 
@@ -70,10 +71,11 @@ if __name__ == '__main__':
             print("Importing model ...")
             # model = UNet2D(in_channels=1, initial_filter_size=args.initial_filter_size, kernel_size=3, classes=args.classes, do_instancenorm=True)
             model_kwargs = get_kwargs_model(args)
-            model = GraphUnetV5(in_channels=1,
-                                initial_filter_size=args.initial_filter_size,
-                                kernel_size=3, classes=args.classes,
-                                do_instancenorm=True, **model_kwargs)
+            # model = GraphUnetV5(in_channels=1,
+            #                     initial_filter_size=args.initial_filter_size,
+            #                     kernel_size=3, classes=args.classes,
+            #                     do_instancenorm=True, **model_kwargs)
+            model = UNet(1, 1)
             print("Model imported")
             if args.restart:
                 print('Loading from saved model ' + args.pretrained_model_path)

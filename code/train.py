@@ -97,10 +97,10 @@ class Trainer():
                 image_var = img.float().to(self.args.device)
                 label = label.float().to(self.args.device).unsqueeze(1)
                 keypoints = keypoints.float().to(self.args.device)
-                label_logits, _ = self.model(image_var, keypoints)
+                # label_logits, _ = self.model(image_var, keypoints)
+                label_logits, _ = self.model(image_var)
                 loss = self.criterion(label_logits, label)
                 seg = self.meanshift(label_logits)
-
                 seg = rearrange(seg, 'b h w -> b (h w)')
                 #seg = (seg - seg.min(dim=-1)) / (seg.max(dim=-1) - seg.min(dim=-1)) * 255
                 label = rearrange(label.squeeze(1), 'b h w -> b (h w)')
@@ -124,7 +124,8 @@ class Trainer():
             img = img.float().to(self.args.device)
             label = label.float().to(self.args.device)
             keypoints = keypoints.float().to(self.args.device)
-            label_logits, _ = self.model(img, keypoints)
+            # label_logits, _ = self.model(img, keypoints)
+            label_logits, _ = self.model(img)
             
             seg = self.meanshift(label_logits).cpu().numpy()[0]
             img = img[0].squeeze(0).cpu().numpy()
@@ -170,7 +171,8 @@ class Trainer():
             label = label.float().to(self.args.device).unsqueeze(1)
             keypoints = keypoints.float().to(self.args.device)
             self.scheduler(self.optimizer, batch_idx, epoch)
-            label_logits, _ = self.model(image_var, keypoints)
+            # label_logits, _ = self.model(image_var, keypoints)
+            label_logits, _ = self.model(image_var)
             loss = self.criterion(label_logits, label)
             self.optimizer.zero_grad()
             loss.backward()

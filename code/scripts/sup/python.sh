@@ -9,13 +9,13 @@ export num_layer=8
 CUDA_VISIBLE_DEVICES=0                                                      \
 python                                                                      \
 code/sup.py                                                                      \
---batch_size             1                                                 \
---classes                105                                                  \
+--batch_size             8                                                 \
+--classes                1                                                  \
 --data_dir               ./data/supervised                                  \
 --dataset                raidium                                                \
 --device                 cuda:0                                             \
 --enable_few_data                                                           \
---epochs                 101                                                \
+--epochs                 100                                                \
 --experiment_name        sup_raidium_sample_$sample_size\_fold_$fold\_      \
 --fold                   $fold                                              \
 --initial_filter_size    32                                                 \

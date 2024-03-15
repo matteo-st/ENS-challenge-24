@@ -453,9 +453,7 @@ class RAIDIUM(Dataset):
             #     )
             img = (img - np.min(img)) / (np.max(img) - np.min(img)) 
             img = img[None] # add the chanel dimension
-            print("getitem label", label.shape)
-            print('getitem img', img.shape)
-            print('getitem keypoints', keypoints.shape)
+            print("getitem i l k", img.shape, label.shape, keypoints.shape)
             return img, label, keypoints
             # return img, label, keypoints, keypoints_label, nimg, nkeypoints
 

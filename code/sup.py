@@ -155,7 +155,7 @@ def run(fold, writer, args):
 
         # val_dice = validate(validate_loader, model, epoch, logger, args)
 
-        if (epoch % 2 == 0):
+        if (epoch % 2 == -4):
             # evaluate for one epoch
             val_dice = validate(validate_loader, model, epoch, logger, args)
 
@@ -194,6 +194,8 @@ def train(data_loader, model, criterion, epoch, optimizer, scheduler, logger, ar
         # img, label, keypoints, keypoints_label, nimg, nkp = tup
         image_var = img.float().to(args.device)
         label = label.float().to(args.device).unsqueeze(1)
+        #label = F.one_hot(label, num_classes=args.classes).permute(0, 3, 1, 2)
+        print("key", keypoints.shape)
         keypoints = keypoints.float().to(args.device)
         # keypoints_label = keypoints_label.long().to(args.device)
         # nimg = nimg.float().to(args.device)
@@ -208,32 +210,32 @@ def train(data_loader, model, criterion, epoch, optimizer, scheduler, logger, ar
         loss_1 = criterion(x_out, label)
         # loss_2 = criterion(graph_out, keypoints_label.squeeze(dim=1))
         loss = loss_1
-        losses.update(loss_1.item(), image_var.size(0))
+        #losses.update(loss_1.item(), image_var.size(0))
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         # Do softmax
-        x_out = F.softmax(x_out, dim=1)
+        #x_out = F.softmax(x_out, dim=1)
         # graph_out = F.softmax(graph_out, dim=1)
-        metric_val.update(label.long().squeeze(dim=1), x_out)
+        #metric_val.update(label.long().squeeze(dim=1), x_out)
         # graph_metric_val.update(
         #     keypoints_label.long().squeeze(dim=1), graph_out
         # )
-        _, _, Dice = metric_val.get()
-        _, _, graph_Dice = graph_metric_val.get()
+        #_, _, Dice = metric_val.get()
+        #_, _, graph_Dice = graph_metric_val.get()
         print('loss' , loss_1.item())
-        logger.print(
-            f"Training epoch:{epoch:4d}, batch:{batch_idx:4d}/{len(data_loader)}, lr:{optimizer.param_groups[0]['lr']:.6f}, loss:{losses.avg:.4f}, pixel / graph Dice:{Dice:.4f} / {graph_Dice:.4f}")
+        #logger.print(
+        #    f"Training epoch:{epoch:4d}, batch:{batch_idx:4d}/{len(data_loader)}, lr:{optimizer.param_groups[0]['lr']:.6f}, loss:{losses.avg:.4f}, pixel / graph Dice:{Dice:.4f} / {graph_Dice:.4f}")
 
         if args.debug_mode:
             break
         # if batch_idx > step:
         #     break
 
-    pixAcc, mIoU, mDice = metric_val.get()
+    #pixAcc, mIoU, mDice = metric_val.get()
 
-    return losses.avg, mDice
-
+    #return losses.avg, mDice
+    return 0,0
 
 def validate(data_loader, model, epoch, logger, args):
     model.eval()

@@ -1,5 +1,6 @@
 import json 
 import os.path
+import os
 from itertools import chain
 import random 
 import torch
@@ -34,6 +35,7 @@ class Trainer():
         self.fold = fold
         self.logger = logger
         self.dict_record = {'epoch' : {}}
+        self.save_img_path = os.path.join(args.runs_dir, args.experiment_name + args.save, "images/")
         
         self.meanshift = MeanShiftCluster()
         self.init_optim()
@@ -53,7 +55,7 @@ class Trainer():
 
         for epoch in range(self.args.epochs):
             train_loss = self.train_epoch(epoch)
-            val_loss = self.val_epoch()
+            val_loss = self.val_epoch(epoch)
 
             self.writer.add_scalar('training_loss_fold'+str(self.fold), 
                                    train_loss, epoch)
@@ -72,7 +74,7 @@ class Trainer():
                                 #  val_dice=val_metric
                                  ))
             
-            self.logger.print(self.metric.summary())
+            print(self.metric.summary())
             self.dict_record['epoch'][epoch] = {
                     'train_loss': train_loss, 
                     'val_loss ': val_loss,
@@ -100,7 +102,7 @@ class Trainer():
             # torch.save(save_dict, os.path.join(
             #     self.args.model_result_dir, "latest.pth"))
 
-    def val_epoch(self):
+    def val_epoch(self, epoch):
         self.model.eval()
         self.metric.reset_val()
         with torch.no_grad():
@@ -118,11 +120,14 @@ class Trainer():
                 label = rearrange(label.squeeze(1), 'b h w -> b (h w)')
                 self.metric.add_val(seg.detach().cpu(), label.detach().cpu())
 
-        self.visualize_seg(type="val")    
+        self.visualize_seg(epoch=epoch, type="val")    
         return loss 
 
 
     def visualize_seg(self, epoch=0, type="train"):
+        
+        if not os.path.exists(self.save_img_path):
+            os.makedirs(self.save_img_path)
         if type == "train":
             data_loader = self.train_loader
         elif type == "val":
@@ -132,21 +137,27 @@ class Trainer():
             img, label, keypoints = next(iter(data_loader))  # Example: get first batch
             img = img.float().to(self.args.device)
             label = label.float().to(self.args.device)
-            label_logits, _ = self.model(img, keypoints)
             keypoints = keypoints.float().to(self.args.device)
+            label_logits, _ = self.model(img, keypoints)
             # Assume meanshift or similar method is used to get seg from label_logits
             seg = self.meanshift(label_logits).cpu().numpy()
             
             # 
+		
+            img = img[0].squeeze(0).cpu().numpy()
+            label = label[0].cpu().numpy()
+            seg = seg[0]
+            print("shape i s l", img.shape, seg.shape, label.shape)
             fig, axes = plt.subplots(1, 3)
             axes[0].imshow(img, cmap="gray")
             axes[1].imshow(img, cmap="gray")
             axes[2].imshow(img, cmap="gray")
             seg_masked = np.ma.masked_where(seg.reshape((512,512)) == 0, (seg.reshape((512,512))))
             label_masked = np.ma.masked_where(label.reshape((512,512)) == 0, (label.reshape((512,512))))
-            axes[1].imshow(seg_masked, cmap="tab20")
+            axes[1].imshow(label_masked, cmap="tab20")
             axes[2].imshow(seg_masked, cmap="tab20")
             plt.axis("off")
+            plt.savefig(os.path.join(self.save_img_path, f"epoch-{epoch}_{type}.png"))  
 
               # Make a grid with 3 images in a row
             # # Visualize the first sample of the batch

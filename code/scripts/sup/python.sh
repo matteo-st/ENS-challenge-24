@@ -26,5 +26,4 @@ code/sup.py                                                                 \
 --patch_size             512 512                                            \
 --results_dir            ./results/sup                                      \
 --runs_dir               ./runs/sup                                         \
---sampling_k             $sample_size                                       \
---save                   all_graph_features
+--sampling_k             $sample_size                                       

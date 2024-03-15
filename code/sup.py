@@ -37,45 +37,46 @@ def get_kwargs_model(args):
     model_kwargs.pop('classes')
     return model_kwargs
 
-if __name__ == '__main__':
+def create_directories(args):
     # initialize config
-    args = get_config()
-    if args.save == '':
-        args.save = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    args.save_path = os.path.join(
-        args.results_dir, args.experiment_name + args.save)
-    if not os.path.exists(args.save_path):
-        os.makedirs(args.save_path)
-    writer = SummaryWriter(os.path.join(
-        args.runs_dir, args.experiment_name + args.save))
     
+    args.experiment_name = args.experiment_name + f"bs-{args.batch_size}_" + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    args.checkpoints_dir = os.path.join(args.checkpoints_dir, args.experiment_name)
+    args.logs_dir = os.path.join(args.logs_dir, args.experiment_name)
+    args.tensorboard_dir = os.path.join(args.logs_dir, "tensorboard")
+    args.save_img_dir = os.path.join(args.logs_dir, "image")
+    
+    for dir in [args.checkpoints_dir, args.tensorboard_dir, args.save_img_dir]:
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+
+if __name__ == '__main__':
+    args = get_config()
+    create_directories(args)
+    writer = SummaryWriter(args.tensorboard_dir)
+
     for i in range(0, args.cross_vali_num):
         if i == args.fold:
     
-            maybe_mkdir_p(os.path.join(args.save_path, 'cross_val_'+str(args.fold)))
-            logger = PytorchExperimentLogger(os.path.join(
-                args.save_path, 'cross_val_'+str(args.fold)), "elog", ShowTerminal=True)
             # setup cuda
             args.device = torch.device(
                 args.device if torch.cuda.is_available() else "cpu")
-            logger.print(f"the model will run on device:{args.device}")
+            print(f"The model will run on device:{args.device}")
             torch.manual_seed(args.seed)
             if 'cuda' in str(args.device):
                 torch.cuda.manual_seed_all(args.seed)
-            logger.print(f"starting training for cross validation fold {args.fold} ...")
-            model_result_dir = join(args.save_path, 'cross_val_'+str(args.fold), 'model')
-            maybe_mkdir_p(model_result_dir)
-            args.model_result_dir = model_result_dir
-            # create model
-            logger.print("creating model ...")
+
+            # Create model
+            print("Importing model ...")
             # model = UNet2D(in_channels=1, initial_filter_size=args.initial_filter_size, kernel_size=3, classes=args.classes, do_instancenorm=True)
             model_kwargs = get_kwargs_model(args)
             model = GraphUnetV5(in_channels=1,
                                 initial_filter_size=args.initial_filter_size,
                                 kernel_size=3, classes=args.classes,
                                 do_instancenorm=True, **model_kwargs)
+            print("Model imported")
             if args.restart:
-                logger.print('loading from saved model ' + args.pretrained_model_path)
+                print('Loading from saved model ' + args.pretrained_model_path)
                 dict = torch.load(args.pretrained_model_path,
                                 map_location=lambda storage, loc: storage)
                 save_model = dict["net"]
@@ -89,31 +90,17 @@ if __name__ == '__main__':
                 model_dict.update(state_dict)
                 model.load_state_dict(model_dict)
 
-                # load superglue
-                # dict = torch.load('/workspace/src/gcl_1/results/contrast_chd_pcl_2023-04-22_21-16-16/model/latest.pth',
-                #                   map_location=lambda storage, loc: storage)
-                # save_model = dict["net"]
-                # model_dict = model.state_dict()
-                # # we only need to load the parameters of the encoder
-                # state_dict = {
-                #     k: v
-                #     for k, v in save_model.items()
-                #     if 'superglue' in k
-                # }
-                # model_dict.update(state_dict)
-                # model.load_state_dict(model_dict)
-
             model.to(args.device)
             num_parameters = sum([l.nelement() for l in model.parameters()])
-            logger.print(f"Number of parameters: {num_parameters}")
+            print(f"Number of parameters: {num_parameters}")
 
             if args.dataset == "raidium":
                 train_files, val_files = get_split_raidium(args.data_dir, args.fold, args.cross_vali_num)
                 if args.enable_few_data:
                     random.seed(args.seed)
                     train_files = random.sample(list(train_files), k=args.sampling_k)
-                logger.print(f'Number train files :{len(train_files)}')
-                logger.print(f'Number val files :{len(val_files)}')
+                print(f'Number train files :{len(train_files)}')
+                print(f'Number val files :{len(val_files)}')
                 train_dataset = RAIDIUM(files=train_files, purpose='train', args=args)
                 validate_dataset = RAIDIUM(files=val_files, purpose='val', args=args)
                 
@@ -133,7 +120,8 @@ if __name__ == '__main__':
 
             criterion = GlobalLoss().to(args.device)
             metric = RandScore()
-
+            
+            print("Starting training ...")
             trainer = Trainer(
                 args.fold,
                 writer,
@@ -142,6 +130,6 @@ if __name__ == '__main__':
                 model,
                 criterion,
                 metric,
-                args,
-                logger)
+                args
+                )
             

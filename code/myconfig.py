@@ -8,9 +8,9 @@ parser.add_argument("--device", type=str, default='cuda:0')
 parser.add_argument("--num_works", type=int, default=16)
 parser.add_argument("--exp_load", type=str, default=None)
 parser.add_argument('--save', metavar='SAVE', default='', help='saved folder')
-parser.add_argument('--results_dir', metavar='RESULTS_DIR',
-                    default='./results', help='results dir')
-parser.add_argument('--runs_dir', default='./runs', help='runs dir')
+parser.add_argument('--checkpoints_dir', metavar='RESULTS_DIR',
+                    default='./checkpoints', help='checkpoints_dir')
+parser.add_argument('--logs_dir', default='./logs', help='logs_dir')
 parser.add_argument('--debug_mode', default=False, action='store_true')
 
 # Data
@@ -39,7 +39,7 @@ parser.add_argument('--graph_weight', type=float, help='weight of the graph')
 
 # Train
 parser.add_argument("--experiment_name", type=str,
-                    default="contrast_chd_simclr_")
+                    default="sup")
 parser.add_argument("--restart", default=False, action='store_true')
 parser.add_argument("--pretrained_model_path", type=str,
                     default='/afs/crc.nd.edu/user/d/dzeng2/UnsupervisedSegmentation/results/supervised_v3_train_2020-10-26_18-41-29/model/latest.pth')

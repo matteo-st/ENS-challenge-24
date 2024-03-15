@@ -12,6 +12,7 @@ from lr_scheduler import LR_Scheduler
 from meanshift import MeanShiftCluster
 from tqdm import tqdm 
 import matplotlib.pyplot as plt
+from torchvision.utils import make_grid
 
 class Trainer():
     def __init__(self, 
@@ -22,8 +23,7 @@ class Trainer():
                  model,
                  criterion,
                  metric,
-                 args,
-                 logger
+                 args
                  ):
         self.args = args
         self.model = model
@@ -33,9 +33,7 @@ class Trainer():
         self.val_loader = val_loader
         self.writer = writer
         self.fold = fold
-        self.logger = logger
         self.dict_record = {'epoch' : {}}
-        self.save_img_path = os.path.join(args.runs_dir, args.experiment_name + args.save, "images/")
         
         self.meanshift = MeanShiftCluster()
         self.init_optim()
@@ -56,51 +54,39 @@ class Trainer():
         for epoch in range(self.args.epochs):
             train_loss = self.train_epoch(epoch)
             val_loss = self.val_epoch(epoch)
+            metric_summaruy = self.metric.summary()
+            train_metric =  metric_summaruy["Train"]["Mean"]
+            val_metric = metric_summaruy["Evaluation"]["Mean"]
 
-            self.writer.add_scalar('training_loss_fold'+str(self.fold), 
-                                   train_loss, epoch)
+            self.writer.add_scalar(f'training_loss_fold-{self.args.fold}', train_loss, epoch)
             # self.writer.add_scalar('training_dice_fold'+str(self.fold), train_metric, epoch)
-            self.writer.add_scalar('learning_rate_fold'+str(self.fold),
+            self.writer.add_scalar(f'lr_fold-{self.args.fold}',
                                    self.optimizer.param_groups[0]['lr'], epoch)
             # self.writer.add_scalar('validate_d_fold'+str(self.fold), val_metric, epoch)
-            self.writer.add_scalar('val_loss_fold'+str(self.fold), val_loss, epoch)
+            self.writer.add_scalar(f'val_loss_fold-{self.args.fold}', val_loss, epoch)
+            self.writer.add_scalar(f'train_metric_fold-{self.args.fold}',
+                                   train_metric, epoch)
+            self.writer.add_scalar(f'val_metric_fold-{self.args.fold}',
+                                    val_metric, epoch)
             
-            self.logger.print('Epoch: {0}\t'
-                         'Training Loss {train_loss:.4f} \t'
-                         'Val Loss {val_loss:.4f} \t'
-                         'Validation Metric  \t'
-                         .format(epoch, train_loss=train_loss, 
-                                 val_loss=val_loss
-                                #  val_dice=val_metric
+            print('Epoch: {0}\t' 
+                  'Training Loss {train_loss:.4f} \t'
+                  'Val Loss {val_loss:.4f} \t'
+                  'Training Metric  {train_metric:.4f}\t'
+                  'Val Metric  {val_metric:.4f}\t'
+                  .format(epoch, train_loss=train_loss, 
+                                 val_loss=val_loss,
+                                 train_metric=train_metric,
+                                 val_metric=val_metric
                                  ))
             
-            print(self.metric.summary())
-            self.dict_record['epoch'][epoch] = {
-                    'train_loss': train_loss, 
-                    'val_loss ': val_loss,
-                    'Metric': self.metric.summary()
-                }
             if epoch % self.args.num_epoch_record == 0:
                 torch.save({
                     'epoch' : epoch,
                     'model_state_dic' : self.model.state_dict(),
                     "optimizer_state_dict" : self.optimizer.state_dict(),
-                    "stats" : self.dict_record["epoch"][epoch]
                     },
-                    os.path.join(self.args.model_result_dir, "epoch-{}.pth".format(epoch)))
-                # save_dict = {"net": self.model.state_dict()}
-                # torch.save(save_dict, os.path.join(
-                #     self.args.model_result_dir, "best.pth"))
-
-
-            # if best_metric < val_metric:
-            #     best_metric = val_metric
-                
-
-            # # save model
-            # save_dict = {"net": self.model.state_dict()}
-            # torch.save(save_dict, os.path.join(
-            #     self.args.model_result_dir, "latest.pth"))
+                    os.path.join(self.args.checkpoints_dir, "epoch-{}.pth".format(epoch)))
 
     def val_epoch(self, epoch):
         self.model.eval()
@@ -139,15 +125,28 @@ class Trainer():
             label = label.float().to(self.args.device)
             keypoints = keypoints.float().to(self.args.device)
             label_logits, _ = self.model(img, keypoints)
-            # Assume meanshift or similar method is used to get seg from label_logits
-            seg = self.meanshift(label_logits).cpu().numpy()
             
-            # 
-		
+            seg = self.meanshift(label_logits).cpu().numpy()[0]
             img = img[0].squeeze(0).cpu().numpy()
             label = label[0].cpu().numpy()
-            seg = seg[0]
-            print("shape i s l", img.shape, seg.shape, label.shape)
+
+            img_trans = plt.get_cmap('gray')(img/img.max())[:, :, :3]  # Discard alpha
+            label_trans = plt.get_cmap('tab20')(label/label.max())[:, :, :3]  # Discard alpha
+            seg_trans = plt.get_cmap('tab20')(seg/seg.max())[:, :, :3]  # Discard alpha
+
+            # Create an overlay where the label is not zero
+            label_trans = np.where(label.reshape((512, 512, 1)) != 0, label_trans, img_trans)
+            seg_trans = np.where(seg.reshape((512, 512, 1)) != 0, seg_trans, img_trans)
+            
+            # (H, W, C) --> (C, H, W)
+            img_trans = torch.tensor(img_trans.transpose((2, 0, 1))).float()
+            label_trans = torch.tensor(label_trans.transpose((2, 0, 1))).float()
+            seg_trans = torch.tensor(seg_trans.transpose((2, 0, 1))).float()
+            
+            self.add_image(
+                os.path.join(self.args.save_img_dir, f"epoch-{epoch}_{type}.png"),
+                  make_grid([img_trans, label_trans, seg_trans]))
+            
             fig, axes = plt.subplots(1, 3)
             axes[0].imshow(img, cmap="gray")
             axes[1].imshow(img, cmap="gray")
@@ -157,29 +156,7 @@ class Trainer():
             axes[1].imshow(label_masked, cmap="tab20")
             axes[2].imshow(seg_masked, cmap="tab20")
             plt.axis("off")
-            plt.savefig(os.path.join(self.save_img_path, f"epoch-{epoch}_{type}.png"))  
-
-              # Make a grid with 3 images in a row
-            # # Visualize the first sample of the batch
-            # self.plot_seg(img[0].cpu().numpy(), label[0].cpu().numpy(), seg[0], epoch, "train")
-
-            # os.makedirs(save_dir, exist_ok=True)
-    
-            # fig, axes = plt.subplots(1, 3, figsize=(12, 4))
-            # axes[0].imshow(image.squeeze(), cmap="gray")
-            # axes[0].set_title("Image")
-            # axes[1].imshow(label.squeeze(), cmap="jet", alpha=0.5)
-            # axes[1].set_title("Ground Truth")
-            # axes[2].imshow(seg.squeeze(), cmap="jet", alpha=0.5)
-            # axes[2].set_title("Segmentation Prediction")
-            # for ax in axes:
-            #     ax.axis("off")
-            # plt.tight_layout()
-            
-            # Save the figure
-            # fig.savefig(os.path.join(save_dir, f"{prefix}_epoch_{epoch}.png"))
-            # plt.close(fig)
-
+            plt.savefig(os.path.join(self.save_img_dir, f"epoch-{epoch}_{type}.png"))  
 
 
 

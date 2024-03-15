@@ -10,6 +10,7 @@ import numpy as np
 from lr_scheduler import LR_Scheduler
 from meanshift import MeanShiftCluster
 from tqdm import tqdm 
+import matplotlib.pyplot as plt
 
 class Trainer():
     def __init__(self, 
@@ -61,7 +62,7 @@ class Trainer():
                                    self.optimizer.param_groups[0]['lr'], epoch)
             # self.writer.add_scalar('validate_d_fold'+str(self.fold), val_metric, epoch)
             self.writer.add_scalar('val_loss_fold'+str(self.fold), val_loss, epoch)
-
+            
             self.logger.print('Epoch: {0}\t'
                          'Training Loss {train_loss:.4f} \t'
                          'Val Loss {val_loss:.4f} \t'
@@ -70,6 +71,8 @@ class Trainer():
                                  val_loss=val_loss
                                 #  val_dice=val_metric
                                  ))
+            
+            self.logger.print(self.metric.summary())
             self.dict_record['epoch'][epoch] = {
                     'train_loss': train_loss, 
                     'val_loss ': val_loss,
@@ -115,7 +118,57 @@ class Trainer():
                 label = rearrange(label.squeeze(1), 'b h w -> b (h w)')
                 self.metric.add_val(seg.detach().cpu(), label.detach().cpu())
 
-            return loss 
+        self.visualize_seg(type="val")    
+        return loss 
+
+
+    def visualize_seg(self, epoch=0, type="train"):
+        if type == "train":
+            data_loader = self.train_loader
+        elif type == "val":
+            data_loader = self.val_loader
+
+        with torch.no_grad():
+            img, label, keypoints = next(iter(data_loader))  # Example: get first batch
+            img = img.float().to(self.args.device)
+            label = label.float().to(self.args.device)
+            label_logits, _ = self.model(img, keypoints)
+            keypoints = keypoints.float().to(self.args.device)
+            # Assume meanshift or similar method is used to get seg from label_logits
+            seg = self.meanshift(label_logits).cpu().numpy()
+            
+            # 
+            fig, axes = plt.subplots(1, 3)
+            axes[0].imshow(img, cmap="gray")
+            axes[1].imshow(img, cmap="gray")
+            axes[2].imshow(img, cmap="gray")
+            seg_masked = np.ma.masked_where(seg.reshape((512,512)) == 0, (seg.reshape((512,512))))
+            label_masked = np.ma.masked_where(label.reshape((512,512)) == 0, (label.reshape((512,512))))
+            axes[1].imshow(seg_masked, cmap="tab20")
+            axes[2].imshow(seg_masked, cmap="tab20")
+            plt.axis("off")
+
+              # Make a grid with 3 images in a row
+            # # Visualize the first sample of the batch
+            # self.plot_seg(img[0].cpu().numpy(), label[0].cpu().numpy(), seg[0], epoch, "train")
+
+            # os.makedirs(save_dir, exist_ok=True)
+    
+            # fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+            # axes[0].imshow(image.squeeze(), cmap="gray")
+            # axes[0].set_title("Image")
+            # axes[1].imshow(label.squeeze(), cmap="jet", alpha=0.5)
+            # axes[1].set_title("Ground Truth")
+            # axes[2].imshow(seg.squeeze(), cmap="jet", alpha=0.5)
+            # axes[2].set_title("Segmentation Prediction")
+            # for ax in axes:
+            #     ax.axis("off")
+            # plt.tight_layout()
+            
+            # Save the figure
+            # fig.savefig(os.path.join(save_dir, f"{prefix}_epoch_{epoch}.png"))
+            # plt.close(fig)
+
 
 
 
@@ -142,7 +195,7 @@ class Trainer():
                 label = rearrange(label.squeeze(1), 'b h w -> b (h w)')
                 self.metric.add_train(seg.detach().cpu(), label.detach().cpu())
 
-
+        self.visualize_seg(type="train")    
         return loss
 
 

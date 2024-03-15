@@ -62,6 +62,7 @@ parser.add_argument('--weight_cnn_contrast', type=float, default=1.0)
 parser.add_argument('--weight_graph_contrast', type=float, default=1.0)
 parser.add_argument('--weight_corr', type=float, default=1.0)
 parser.add_argument('--weight_local_contrast', type=float, default=1.0)
+parser.add_argument('--num_epoch_record', type=int, default=3)
 
 # Loss
 parser.add_argument("--temp", type=float, default=0.1)

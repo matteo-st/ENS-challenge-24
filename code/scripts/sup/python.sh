@@ -1,18 +1,18 @@
 #!/bin/bash
 
-#cd /mnt/c/Users/matte/iCloudDrive/Documents/Studies/IASD/College-De-France/Challenge
 cd ~/ENS-challenge-24
-sample_size=${1:-5}
+sample_size=${1:-100}
 fold=${2:-1}
 export num_layer=8
 
 CUDA_VISIBLE_DEVICES=0                                                      \
 python                                                                      \
-code/sup.py                                                                      \
---batch_size             8                                                 \
+code/sup.py                                                                 \
+--batch_size             4                                                  \
 --classes                1                                                  \
+--num_epoch_record       1                                                  \
 --data_dir               ./data/supervised                                  \
---dataset                raidium                                                \
+--dataset                raidium                                            \
 --device                 cuda:0                                             \
 --enable_few_data                                                           \
 --epochs                 100                                                \

@@ -52,9 +52,9 @@ if __name__ == '__main__':
     for i in range(0, args.cross_vali_num):
         if i == args.fold:
     
-            maybe_mkdir_p(os.path.join(args.save_path, 'cross_val_'+str(fold)))
+            maybe_mkdir_p(os.path.join(args.save_path, 'cross_val_'+str(args.fold)))
             logger = PytorchExperimentLogger(os.path.join(
-                args.save_path, 'cross_val_'+str(fold)), "elog", ShowTerminal=True)
+                args.save_path, 'cross_val_'+str(args.fold)), "elog", ShowTerminal=True)
             # setup cuda
             args.device = torch.device(
                 args.device if torch.cuda.is_available() else "cpu")
@@ -62,8 +62,8 @@ if __name__ == '__main__':
             torch.manual_seed(args.seed)
             if 'cuda' in str(args.device):
                 torch.cuda.manual_seed_all(args.seed)
-            logger.print(f"starting training for cross validation fold {fold} ...")
-            model_result_dir = join(args.save_path, 'cross_val_'+str(fold), 'model')
+            logger.print(f"starting training for cross validation fold {args.fold} ...")
+            model_result_dir = join(args.save_path, 'cross_val_'+str(args.fold), 'model')
             maybe_mkdir_p(model_result_dir)
             args.model_result_dir = model_result_dir
             # create model

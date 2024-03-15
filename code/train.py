@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 from lr_scheduler import LR_Scheduler
 from meanshift import MeanShiftCluster
+from tqdm import tqdm 
 
 class Trainer():
     def __init__(self, 
@@ -32,7 +33,8 @@ class Trainer():
         self.fold = fold
         self.logger = logger
         self.dict_record = {'epoch' : {}}
-
+        
+        self.meanshift = MeanShiftCluster()
         self.init_optim()
         self.training()
 
@@ -49,7 +51,7 @@ class Trainer():
     def training(self):
 
         for epoch in range(self.args.epochs):
-            train_loss = self.train_epoch()
+            train_loss = self.train_epoch(epoch)
             val_loss = self.val_epoch()
 
             self.writer.add_scalar('training_loss_fold'+str(self.fold), 
@@ -73,7 +75,7 @@ class Trainer():
                     'val_loss ': val_loss,
                     'Metric': self.metric.summary()
                 }
-            if epoch % self.num_epoch_record == 0:
+            if epoch % self.args.num_epoch_record == 0:
                 torch.save({
                     'epoch' : epoch,
                     'model_state_dic' : self.model.state_dict(),
@@ -110,13 +112,7 @@ class Trainer():
 
                 seg = rearrange(seg, 'b h w -> b (h w)')
                 #seg = (seg - seg.min(dim=-1)) / (seg.max(dim=-1) - seg.min(dim=-1)) * 255
-                label = rearrange(label, 'b h w -> b (h w)')
-                self.metric.add_val(seg.detach().cpu(), label.detach().cpu())
-
-                seg = self.meanshift(label_logits)
-                seg = rearrange(seg, 'b h w -> b (h w)')
-                #seg = (seg - seg.min(dim=-1)) / (seg.max(dim=-1) - seg.min(dim=-1)) * 255
-                label = rearrange(label, 'b h w -> b (h w)')
+                label = rearrange(label.squeeze(1), 'b h w -> b (h w)')
                 self.metric.add_val(seg.detach().cpu(), label.detach().cpu())
 
             return loss 
@@ -127,7 +123,7 @@ class Trainer():
         self.model.train()
         self.metric.reset_train()
 
-        for batch_idx, tup in enumerate(self.train_loader):
+        for batch_idx, tup in tqdm(enumerate(self.train_loader)):
             img, label, keypoints = tup
             image_var = img.float().to(self.args.device)
             label = label.float().to(self.args.device).unsqueeze(1)
@@ -143,7 +139,7 @@ class Trainer():
                 seg = self.meanshift(label_logits)
                 seg = rearrange(seg, 'b h w -> b (h w)')
                 #seg = (seg - seg.min(dim=-1)) / (seg.max(dim=-1) - seg.min(dim=-1)) * 255
-                label = rearrange(label, 'b h w -> b (h w)')
+                label = rearrange(label.squeeze(1), 'b h w -> b (h w)')
                 self.metric.add_train(seg.detach().cpu(), label.detach().cpu())
 
 

@@ -418,7 +418,6 @@ class RAIDIUM(Dataset):
 
             # return img1, img2, self.slice_position[index], self.partition[index]
         else:
-            print("index", index, self.files[index])
             img = np.array(cv2.imread(
                 os.path.join(self.data_dir, "x_train", self.files[index]),
                 cv2.IMREAD_GRAYSCALE), dtype=np.float32)
@@ -432,9 +431,7 @@ class RAIDIUM(Dataset):
             # img -= self.means[index]
             # img /= self.stds[index]
             # label = all_data[1].astype(np.float32)
-            print('shape', np.shape(img), np.shape(label))
             img, label, keypoints = self._sup_process(img, label)
-            print('shape', np.shape(img), np.shape(label), np.shape(keypoints))
 
             if img is None or label is None or keypoints is None:
                 print(img, label, keypoints)
@@ -453,7 +450,6 @@ class RAIDIUM(Dataset):
             #     )
             img = (img - np.min(img)) / (np.max(img) - np.min(img)) 
             img = img[None] # add the chanel dimension
-            print("getitem i l k", img.shape, label.shape, keypoints.shape)
             return img, label, keypoints
             # return img, label, keypoints, keypoints_label, nimg, nkeypoints
 

@@ -98,7 +98,7 @@ class Trainer():
                 label = label.float().to(self.args.device).unsqueeze(1)
                 keypoints = keypoints.float().to(self.args.device)
                 # label_logits, _ = self.model(image_var, keypoints)
-                label_logits, _ = self.model(image_var)
+                label_logits = self.model(image_var)
                 loss = self.criterion(label_logits, label)
                 seg = self.meanshift(label_logits)
                 seg = rearrange(seg, 'b h w -> b (h w)')
@@ -112,8 +112,6 @@ class Trainer():
 
     def visualize_seg(self, epoch=0, type="train"):
         
-        if not os.path.exists(self.save_img_path):
-            os.makedirs(self.save_img_path)
         if type == "train":
             data_loader = self.train_loader
         elif type == "val":
@@ -125,7 +123,7 @@ class Trainer():
             label = label.float().to(self.args.device)
             keypoints = keypoints.float().to(self.args.device)
             # label_logits, _ = self.model(img, keypoints)
-            label_logits, _ = self.model(img)
+            label_logits = self.model(img)
             
             seg = self.meanshift(label_logits).cpu().numpy()[0]
             img = img[0].squeeze(0).cpu().numpy()
@@ -144,7 +142,7 @@ class Trainer():
             label_trans = torch.tensor(label_trans.transpose((2, 0, 1))).float()
             seg_trans = torch.tensor(seg_trans.transpose((2, 0, 1))).float()
             
-            self.add_image(
+            self.writer.add_image(
                 os.path.join(self.args.save_img_dir, f"epoch-{epoch}_{type}.png"),
                   make_grid([img_trans, label_trans, seg_trans]))
             
@@ -157,7 +155,7 @@ class Trainer():
             axes[1].imshow(label_masked, cmap="tab20")
             axes[2].imshow(seg_masked, cmap="tab20")
             plt.axis("off")
-            plt.savefig(os.path.join(self.save_img_dir, f"epoch-{epoch}_{type}.png"))  
+            plt.savefig(os.path.join(self.args.save_img_dir, f"epoch-{epoch}_{type}.png"))  
 
 
 
@@ -172,7 +170,7 @@ class Trainer():
             keypoints = keypoints.float().to(self.args.device)
             self.scheduler(self.optimizer, batch_idx, epoch)
             # label_logits, _ = self.model(image_var, keypoints)
-            label_logits, _ = self.model(image_var)
+            label_logits = self.model(image_var)
             loss = self.criterion(label_logits, label)
             self.optimizer.zero_grad()
             loss.backward()

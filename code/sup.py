@@ -6,7 +6,7 @@ from datetime import datetime
 import torch.nn.functional as F
 from loss.dice_loss import DiceLoss
 # from dataset.acdc_graph import ACDC
-from dataset.chd import  RAIDIUM, get_split_raidium, raidius_sup_collate
+from dataset.chd import  RaidiumLabeled, get_split_raidium, raidius_sup_collate
 # from dataset.raidium import RAIDIUM, raidius_sup_collate, get_split_raidium
 # from dataset.hvsmr import HVSMR
 # from dataset.mmwhs import MMWHS
@@ -22,6 +22,8 @@ import segmentation_models_pytorch as smp
 from loss.loss_perm_inv import GlobalLoss
 from train import Trainer
 from models import UNet
+from networks.vit_seg_modeling import VisionTransformer as ViT_seg
+from networks.vit_seg_modeling import CONFIGS as CONFIGS_ViT_seg
 from meters import RandScore
 
 
@@ -103,8 +105,8 @@ if __name__ == '__main__':
                     train_files = random.sample(list(train_files), k=args.sampling_k)
                 print(f'Number train files :{len(train_files)}')
                 print(f'Number val files :{len(val_files)}')
-                train_dataset = RAIDIUM(files=train_files, purpose='train', args=args)
-                validate_dataset = RAIDIUM(files=val_files, purpose='val', args=args)
+                train_dataset = RaidiumLabeled(files=train_files, purpose='train', args=args)
+                validate_dataset = RaidiumLabeled(files=val_files, purpose='val', args=args)
                 
 
             train_loader = torch.utils.data.DataLoader(

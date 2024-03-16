@@ -26,6 +26,7 @@ parser.add_argument('--sampling_k', type=int, default=10)
 parser.add_argument('--cross_vali_num', type=int, default=5)
 
 # Model
+parser.add_argument("--model_name", type=str, default="UNet")
 parser.add_argument("--initial_filter_size", type=int, default=48)
 parser.add_argument("--patch_size", nargs='+', type=int)
 parser.add_argument("--classes", type=int, default=4)
@@ -37,9 +38,18 @@ parser.add_argument('--num_layers', type=int, default=9,
                     help='number of layers in the graph')
 parser.add_argument('--graph_weight', type=float, help='weight of the graph')
 
+## TransUnet
+parser.add_argument('--n_skip', type=int,
+                    default=3, help='using number of skip-connect, default is num')
+parser.add_argument('--vit_name', type=str,
+                    default='R50-ViT-B_16', help='select one vit model')
+parser.add_argument('--vit_patches_size', type=int,
+                    default=16, help='vit_patches_size, default is 16')
+
+
 # Train
 parser.add_argument("--experiment_name", type=str,
-                    default="sup")
+                    default="")
 parser.add_argument("--restart", default=False, action='store_true')
 parser.add_argument("--pretrained_model_path", type=str,
                     default='/afs/crc.nd.edu/user/d/dzeng2/UnsupervisedSegmentation/results/supervised_v3_train_2020-10-26_18-41-29/model/latest.pth')

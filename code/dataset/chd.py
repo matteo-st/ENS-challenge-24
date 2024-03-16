@@ -209,16 +209,16 @@ def visulize_matches(image1, keypoints1, match1, image2, keypoints2, match2, sav
 
 class RaidiumUnlabeled(Dataset):
 
-    def __init__(self, path, purpose, args):
-        self.data_dir = args.data_dir
-        self.patch_size = args.patch_size
-        self.purpose = purpose
-        self.classes = args.classes
-        self.do_contrast = args.do_contrast
-        self.path = path
-        self.image_files = np.array([f for f in os.listdir(path) if f.endswith('.png')])
+    def __init__(self, path, purpose=None, args=None):
         
-        print(f'dataset length: {len(self.files)}')
+        if args == None:
+            self.path = path
+            self.image_files = np.array([f for f in os.listdir(path) if f.endswith('.png')])
+        else: 
+            self.data_dir = args.data_dir
+            self.patch_size = args.patch_size
+            self.purpose = purpose
+            self.classes = args.classes
 
 
     def _sup_process(self, image, label, debug=False):
@@ -352,17 +352,17 @@ def raidius_sup_collate(batch):
     Returns:
         _type_: _description_
     """
-    if None in batch:
-        print('None in batch')
-        batch = [item for item in batch if item is not None]
+    # if None in batch:
+    #     print('None in batch')
+    #     batch = [item for item in batch if item is not None]
 
-    num_keypoints = min([len(item[2]) for item in batch])
-    batch = [list(item) for item in batch]
-    for i in range(len(batch)):
-        selected_rows = np.random.choice(
-            batch[i][2].shape[0], size=num_keypoints, replace=False
-        )
-        batch[i][2] = batch[i][2][selected_rows]
+    # num_keypoints = min([len(item[2]) for item in batch])
+    # batch = [list(item) for item in batch]
+    # for i in range(len(batch)):
+    #     selected_rows = np.random.choice(
+    #         batch[i][2].shape[0], size=num_keypoints, replace=False
+    #     )
+    #     batch[i][2] = batch[i][2][selected_rows]
     return torch.utils.data.dataloader.default_collate(batch)
 
 

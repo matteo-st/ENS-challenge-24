@@ -15,13 +15,18 @@ code/sup.py                                                                 \
 --dataset                raidium                                            \
 --device                 cuda:0                                             \
 --epochs                 20                                                 \
---experiment_name        sup_                                               \
+--experiment_name                                                       \
 --fold                   $fold                                              \
 --initial_filter_size    32                                                 \
 --lr                     5e-5                                               \
 --min_lr                 5e-6                                               \
 --num_works              1                                                  \
 --patch_size             512 512                                            \
+--img_size             512 512                                              \
 --checkpoints_dir        ./checkpoints/sup                                  \
 --logs_dir               ./logs/sup                                         \
+--n_skip                 3                                                  \
+--vit_name               ViT-B_16                                           \
+--vit_patches_size       16                                                 \
+--model_name             TransUNet                                                 \
 #--sampling_k             $sample_size                                       \

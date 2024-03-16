@@ -144,7 +144,8 @@ class Trainer():
             
             self.writer.add_image(
                 os.path.join(self.args.save_img_dir, f"epoch-{epoch}_{type}.png"),
-                  make_grid([img_trans, label_trans, seg_trans]))
+                  make_grid([img_trans, label_trans, seg_trans]),
+                  epoch)
             
             fig, axes = plt.subplots(1, 3)
             axes[0].imshow(img, cmap="gray")

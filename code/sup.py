@@ -4,17 +4,12 @@ import random
 from datetime import datetime
 
 import torch.nn.functional as F
-from loss.dice_loss import DiceLoss
-# from dataset.acdc_graph import ACDC
+
 from dataset.chd import  RaidiumLabeled, get_split_raidium, raidius_sup_collate
-# from dataset.raidium import RAIDIUM, raidius_sup_collate, get_split_raidium
-# from dataset.hvsmr import HVSMR
-# from dataset.mmwhs import MMWHS
-from experiment_log import PytorchExperimentLogger
-from lr_scheduler import LR_Scheduler
-from metrics import SegmentationMetric
+
+
 from myconfig import get_config
-# from network.unet2d import UNet2D
+
 from network.dynamic_graph_unet2d import GraphUnetV5
 from torch.utils.tensorboard import SummaryWriter
 from utils import *
@@ -43,7 +38,7 @@ def get_kwargs_model(args):
 def create_directories(args):
     # initialize config
     
-    args.experiment_name = args.experiment_name + f"bs-{args.batch_size}_" + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    args.experiment_name = args.experiment_name + '_' + args.model_name + f"bs-{args.batch_size}_" + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     args.checkpoints_dir = os.path.join(args.checkpoints_dir, args.experiment_name)
     args.logs_dir = os.path.join(args.logs_dir, args.experiment_name)
     args.tensorboard_dir = os.path.join(args.logs_dir, "tensorboard")
@@ -77,8 +72,19 @@ if __name__ == '__main__':
             #                     initial_filter_size=args.initial_filter_size,
             #                     kernel_size=3, classes=args.classes,
             #                     do_instancenorm=True, **model_kwargs)
-            model = UNet(1, 1)
-            print("Model imported")
+            
+            if args.model_name == "UNet":
+                model = UNet(1, args.classes)
+            elif args.model_name == "TransUNet":
+                config_vit = CONFIGS_ViT_seg[args.vit_name]
+                config_vit.n_classes = args.num_classes
+                config_vit.n_skip = args.n_skip
+                if args.vit_name.find('R50') != -1:
+                    config_vit.patches.grid = (int(args.img_size / args.vit_patches_size), int(args.img_size / args.vit_patches_size))
+                model = ViT_seg(config_vit, img_size=args.img_size, num_classes=args.classes).cuda()
+                model.load_from(weights=np.load(config_vit.pretraianed_path))
+            print("Model {model_name} imported".format(model_name=args.model_name))
+
             if args.restart:
                 print('Loading from saved model ' + args.pretrained_model_path)
                 dict = torch.load(args.pretrained_model_path,

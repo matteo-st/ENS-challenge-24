@@ -125,7 +125,7 @@ class Trainer():
             label = label.float().to(self.args.device)
             keypoints = keypoints.float().to(self.args.device)
             # label_logits, _ = self.model(img, keypoints)
-            label_logits, _ = self.model(img)
+            label_logits = self.model(img)
             
             seg = self.meanshift(label_logits).cpu().numpy()[0]
             img = img[0].squeeze(0).cpu().numpy()

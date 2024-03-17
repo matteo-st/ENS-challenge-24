@@ -213,8 +213,8 @@ class RaidiumUnlabeled(Dataset):
         
         if args == None:
             self.path = path
-            #self.image_files = np.array([f for f in os.listdir(path) if f.endswith('.png')])
-            self.image_files = list(sorted(Path(dataset_dir).glob("*.png"), key=lambda filename: int(filename.name.rstrip(".png"))))
+            self.image_files = np.array([f for f in os.listdir(path) if f.endswith('.png')])
+            #self.image_files = list(sorted(Path(path).glob("*.png"), key=lambda filename: int(filename.name.rstrip(".png"))))
         else: 
             self.data_dir = args.data_dir
             self.patch_size = args.patch_size
@@ -353,17 +353,17 @@ def raidius_sup_collate(batch):
     Returns:
         _type_: _description_
     """
-    if None in batch:
-         print('None in batch')
-         batch = [item for item in batch if item is not None]
-
-    num_keypoints = min([len(item[2]) for item in batch])
-    batch = [list(item) for item in batch]
-    for i in range(len(batch)):
-         selected_rows = np.random.choice(
-             batch[i][2].shape[0], size=num_keypoints, replace=False
-         )
-         batch[i][2] = batch[i][2][selected_rows]
+#    if None in batch:
+#         print('None in batch')
+#         batch = [item for item in batch if item is not None]
+#
+#    num_keypoints = min([len(item[2]) for item in batch])
+#    batch = [list(item) for item in batch]
+#    for i in range(len(batch)):
+#         selected_rows = np.random.choice(
+#             batch[i][2].shape[0], size=num_keypoints, replace=False
+#         )
+#         batch[i][2] = batch[i][2][selected_rows]
     return torch.utils.data.dataloader.default_collate(batch)
 
 

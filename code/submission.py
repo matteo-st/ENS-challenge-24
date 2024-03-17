@@ -19,7 +19,7 @@ def load_model(args):
     config_vit = CONFIGS_ViT_seg[args["vit_name"]]
     config_vit.n_classes = args["classes"]
     config_vit.n_skip = args["n_skip"]
-    if args.vit_name.find('R50') != -1:
+    if args["vit_name"].find('R50') != -1:
         config_vit.patches.grid = (int(args.img_size / args.vit_patches_size), int(args.img_size / args.vit_patches_size))
     model = ViT_seg(config_vit, img_size=args["img_size"], num_classes=args["classes"]).cuda()
     print(os.getcwd())

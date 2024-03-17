@@ -9,12 +9,22 @@ from einops import rearrange
 
 from dataset.chd import  RaidiumUnlabeled, raidius_sup_collate
 from myconfig import get_config
+from network.vit_seg_modeling import CONFIGS as CONFIGS_ViT_seg
+from network.vit_seg_modeling import VisionTransformer as ViT_seg
 
 # Segmentation
 from meanshift import MeanShiftCluster
 
 def load_model(args):
-    model = UNet(args["input_dim"], args["classes"])
+    config_vit = CONFIGS_ViT_seg[args["vit_name"]]
+    config_vit.n_classes = args["classes"]
+    config_vit.n_skip = args["n_skip"]
+    if args.vit_name.find('R50') != -1:
+        config_vit.patches.grid = (int(args.img_size / args.vit_patches_size), int(args.img_size / args.vit_patches_size))
+    model = ViT_seg(config_vit, img_size=args["img_size"], num_classes=args["classes"]).cuda()
+    print(os.getcwd())
+    # model.load_from(weights=np.load(config_vit.pretrained_path))
+    # model = UNet(args["input_dim"], args["classes"])
     model.load_state_dict(
         torch.load(args["model_path"])["model_state_dic"]
         )
@@ -57,7 +67,10 @@ args = {
     "input_dim" : 1,
     "model_path" : '../checkpoints/sup/_TransUNetbs-4_2024-03-16_20-32-21/epoch-98.pth',
     "submit_path" : '../submissions',
-    "device" : 'cuda:0'
+    "device" : 'cuda:0',
+    "vit_name" : "ViT-B_16",
+    "n_skip" : 0,
+    "img_size" : 512
 }
 
 if __name__ == '__main__':

@@ -47,19 +47,15 @@ def create_submission_file(model, data_loader, args):
     submission = submissions.transpose()
     print("Submission shape : ", submission.shape)
     
-    model_name = args["model_path"].split("/")[-2]
-    print("model", model_name)
-    submit_path = os.path.join(args["submit_path"], model_name)
-
     submissions.transpose().to_csv(
-        os.path.join(submit_path, "y_submit.csv")
+        os.path.join(args["submit_path"], "y_submit.csv")
         )
 
 
 args = {
     "classes" : 1,
     "input_dim" : 1,
-    "model_path" : '../checkpoints/sup/sup_bs-4_2024-03-15_22-15-46/epoch-18.pth',
+    "model_path" : '../checkpoints/sup/_TransUNetbs-4_2024-03-16_20-32-21/epoch-98.pth',
     "submit_path" : '../submissions',
     "device" : 'cuda:0'
 }
@@ -70,13 +66,13 @@ if __name__ == '__main__':
     
     # Creating submission directory
     model_name = args["model_path"].split("/")[-2]
-    submit_path = os.path.join(args["submit_path"], model_name)
-    if not os.path.exists(submit_path):
-        os.makedirs(submit_path)
+    args["submit_path"] = os.path.join(args["submit_path"], model_name)
+    if not os.path.exists(args["submit_path"]):
+        os.makedirs(args["submit_path"])
 
     # Loading trained model
     model = load_model(args)
-    print("Model {model} imported.".format(model_name))
+    print("Model {model} imported.".format(model=model_name))
     test_dataset = RaidiumUnlabeled(path="../data/x_test",
                             args=None)
     test_loader = torch.utils.data.DataLoader(

@@ -18,6 +18,8 @@ parser.add_argument("--dataset", type=str, default="chd",
                     help='can be chd, acdc, mmwhs, hvsmr')
 parser.add_argument("--data_dir", type=str,
                     default="/afs/crc.nd.edu/user/d/dzeng2/data/acdc/preprocessed_data/2D/")
+parser.add_argument('--img_size', type=int,
+                    default=224, help='input patch size of network input')
 parser.add_argument('--batch_size', type=int, default=5)
 parser.add_argument('--seed', type=int, default=1234)
 parser.add_argument("--enable_few_data", default=False, action='store_true')

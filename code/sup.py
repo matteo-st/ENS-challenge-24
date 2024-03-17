@@ -17,8 +17,8 @@ import segmentation_models_pytorch as smp
 from loss.loss_perm_inv import GlobalLoss
 from train import Trainer
 from models import UNet
-from networks.vit_seg_modeling import VisionTransformer as ViT_seg
-from networks.vit_seg_modeling import CONFIGS as CONFIGS_ViT_seg
+from network.vit_seg_modeling import VisionTransformer as ViT_seg
+from network.vit_seg_modeling import CONFIGS as CONFIGS_ViT_seg
 from meters import RandScore
 
 
@@ -77,12 +77,13 @@ if __name__ == '__main__':
                 model = UNet(1, args.classes)
             elif args.model_name == "TransUNet":
                 config_vit = CONFIGS_ViT_seg[args.vit_name]
-                config_vit.n_classes = args.num_classes
+                config_vit.n_classes = args.classes
                 config_vit.n_skip = args.n_skip
                 if args.vit_name.find('R50') != -1:
                     config_vit.patches.grid = (int(args.img_size / args.vit_patches_size), int(args.img_size / args.vit_patches_size))
                 model = ViT_seg(config_vit, img_size=args.img_size, num_classes=args.classes).cuda()
-                model.load_from(weights=np.load(config_vit.pretraianed_path))
+                print(os.getcwd())
+                model.load_from(weights=np.load(config_vit.pretrained_path))
             print("Model {model_name} imported".format(model_name=args.model_name))
 
             if args.restart:
